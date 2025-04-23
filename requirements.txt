@@ -5,3 +5,5 @@ scikit-learn
 xgboost
 tqdm
 geopy
+folium
+branca

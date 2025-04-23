@@ -1,9 +1,12 @@
 requests
 pandas
 numpy
+pytz
 scikit-learn
 xgboost
 tqdm
+scipy
 geopy
 folium
 branca
+optuna

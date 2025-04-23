@@ -49,7 +49,6 @@ Proje, belirlenen coğrafi bölgeyi (varsayılan olarak Türkiye ve çevresi) gr
 *   requests
 *   tqdm
 *   geopy (Opsiyonel - Bölge isimleri için)
-*   beautifulsoup4, lxml (Opsiyonel - KOERI scraping için, son kodda aktif kullanılmıyor)
 
 ## Kurulum
 
@@ -60,7 +59,6 @@ Proje, belirlenen coğrafi bölgeyi (varsayılan olarak Türkiye ve çevresi) gr
     ```bash
     pip install -r requirements.txt
     ```
-    *(Opsiyonel `geopy` kütüphanesini de kurmak isterseniz: `pip install geopy`)*
 
 ## Kullanım
 

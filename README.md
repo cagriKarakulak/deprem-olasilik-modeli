@@ -1,6 +1,7 @@
 # Deneysel Deprem Olasılık Tahmin Modeli (Türkiye ve Çevresi)
 
 ![Untitled](https://github.com/user-attachments/assets/f7656075-5fa0-4d49-87d6-466ccdc28490)
+![Untitled2](https://github.com/user-attachments/assets/edb358f0-a1c8-4c83-941c-7bd67ced55d5)
 
 
 Bu proje, Türkiye ve yakın çevresindeki geçmiş deprem verilerini kullanarak, belirli grid hücrelerinde gelecekteki belirli bir zaman diliminde (varsayılan olarak 30 gün) M5.0 veya üzeri bir deprem olma **olasılığını** tahmin etmeye çalışan **deneysel** bir makine öğrenmesi modelidir.
@@ -52,6 +53,8 @@ Proje, belirlenen coğrafi bölgeyi (varsayılan olarak Türkiye ve çevresi) gr
 *   requests
 *   tqdm
 *   geopy (Opsiyonel - Bölge isimleri için)
+*   folium
+*   branca
 
 ## Kurulum
 
@@ -100,7 +103,7 @@ Scriptin başındaki "Ayarlar ve Sabitler" bölümünden bazı parametreleri de�
 *   XGBoost için hiperparametre optimizasyonu yapmak (`GridSearchCV`, `RandomizedSearchCV`, `Optuna` vb.).
 *   Farklı makine öğrenmesi modellerini denemek (LightGBM, CatBoost, derin öğrenme modelleri - LSTM, ConvLSTM).
 *   Tahmin eşik değerini (şu an 0.5 veya `FUTURE_PREDICTION_PROB_THRESHOLD`) Precision-Recall eğrisi gibi yöntemlerle optimize etmek.
-*   Sonuçları görselleştirmek (örn. risk haritaları oluşturmak - `matplotlib`, `folium`).
+*   Sonuçları görselleştirmek (örn. risk haritaları oluşturmak - `matplotlib`, `folium`). (EKLENDI)
 
 ## Katkıda Bulunma
 

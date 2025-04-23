@@ -1,5 +1,8 @@
 # Deneysel Deprem Olasılık Tahmin Modeli (Türkiye ve Çevresi)
 
+![Untitled](https://github.com/user-attachments/assets/f7656075-5fa0-4d49-87d6-466ccdc28490)
+
+
 Bu proje, Türkiye ve yakın çevresindeki geçmiş deprem verilerini kullanarak, belirli grid hücrelerinde gelecekteki belirli bir zaman diliminde (varsayılan olarak 30 gün) M5.0 veya üzeri bir deprem olma **olasılığını** tahmin etmeye çalışan **deneysel** bir makine öğrenmesi modelidir.
 
 **!!! ÇOK ÖNEMLİ UYARILAR !!!**

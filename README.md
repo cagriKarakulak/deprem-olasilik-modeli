@@ -1,10 +1,8 @@
 # Deneysel Deprem Olasılık Tahmin Modeli (Türkiye ve Çevresi)
 
-![Untitled](https://github.com/user-attachments/assets/f7656075-5fa0-4d49-87d6-466ccdc28490)
-![Untitled2](https://github.com/user-attachments/assets/edb358f0-a1c8-4c83-941c-7bd67ced55d5)
+![Untitled](https://github.com/user-attachments/assets/3049b125-45c3-46d5-a1d7-06ba849bb153)
 
-
-Bu proje, Türkiye ve yakın çevresindeki geçmiş deprem verilerini kullanarak, belirli grid hücrelerinde gelecekteki belirli bir zaman diliminde (varsayılan olarak 30 gün) M5.0 veya üzeri bir deprem olma **olasılığını** tahmin etmeye çalışan **deneysel** bir makine öğrenmesi modelidir.
+Bu Python betiği, belirli bir coğrafi bölge (varsayılan olarak Türkiye ve çevresi) için gelecekteki belirli bir zaman aralığında (varsayılan olarak 30 gün) belirli bir büyüklük eşiğinin (varsayılan M5.0) üzerindeki depremlerin **istatistiksel olasılığını** tahmin etmeye çalışan **deneysel** bir modeldir.
 
 **!!! ÇOK ÖNEMLİ UYARILAR !!!**
 
@@ -17,44 +15,47 @@ Bu proje, Türkiye ve yakın çevresindeki geçmiş deprem verilerini kullanarak
 
 ## Projenin Amacı ve Yöntemi
 
-Proje, belirlenen coğrafi bölgeyi (varsayılan olarak Türkiye ve çevresi) grid hücrelerine böler. Her hücre için, geçmişteki belirli bir zaman penceresindeki (varsayılan 90 gün) deprem aktivitesine dayalı özellikler (deprem sayısı, ortalama/maksimum büyüklük, enerji, b-değeri, Mc, zaman farkları vb.) hesaplar. Bu özellikler kullanılarak bir XGBoost makine öğrenmesi modeli eğitilir. Model, her hücre için bir sonraki zaman penceresinde (varsayılan 30 gün) eşik büyüklüğün (varsayılan M5.0) üzerinde bir deprem olup olmayacağını (0 veya 1) sınıflandırmaya çalışır. Finalde, en güncel verilere dayanarak her hücre için bu olayın gerçekleşme olasılığını tahmin eder ve belirli bir olasılık eşiğinin üzerindeki hücreleri raporlar.
+Model, USGS ve EMSC gibi kamuya açık sismik veri kaynaklarından geçmiş deprem verilerini çeker, bu verileri birleştirir ve tekilleştirir. Ardından bölgeyi bir grid (ızgara) sistemine böler ve her bir hücre için belirli zaman pencerelerindeki sismik aktiviteye dayalı özellikler (deprem sayısı, ortalama/maksimum büyüklük, enerji vekili, b-değeri vb.) hesaplar. İsteğe bağlı olarak komşu hücrelerin etkileşimlerini de dikkate alabilir. Bu özellikler kullanılarak, her hücre için gelecek tahmin penceresinde (örn. 30 gün) hedef büyüklükte bir deprem olup olmayacağını tahmin etmek üzere bir XGBoost makine öğrenimi modeli eğitilir. Son olarak, model en güncel verilere dayanarak gelecek için olasılık tahminleri üretir ve bunları bir metin dosyasına ve isteğe bağlı olarak interaktif bir HTML haritasına kaydeder.
 
 ## Özellikler
 
-*   USGS API'sinden (ve potansiyel olarak diğer FDSN kaynaklarından) tarihsel deprem verilerini çeker.
-*   Veri çekme sırasında sayfalandırma ve hata yönetimi uygular.
-*   Basit bir veri tekilleştirme (deduplication) adımı içerir (farklı kaynaklar kullanıldığında).
-*   Bölgeyi grid hücrelerine böler.
-*   Zaman serisi yaklaşımıyla her hücre için özellikler üretir (b-değeri, enerji vb. dahil).
-*   `TimeSeriesSplit` kullanarak zaman serisine uygun çapraz doğrulama yapar.
-*   XGBoost sınıflandırma modeli eğitir (`scale_pos_weight` ile dengesiz sınıfları dikkate alır).
-*   `tqdm` ile ilerleme çubukları gösterir.
-*   En güncel verilere göre gelecek 30 gün için her hücrenin M5.0+ deprem olasılığını tahmin eder.
-*   `geopy` (varsa) kullanarak yüksek olasılıklı hücreler için yaklaşık bölge isimlerini ve Google Haritalar linklerini alır.
-*   Yüksek olasılıklı tahminleri bir `.txt` dosyasına kaydeder.
+*   **Veri Toplama:** USGS ve EMSC API'larından belirlenen zaman aralığı ve bölge için deprem verisi çeker.
+*   **Veri İşleme:** Farklı kaynaklardan gelen verileri birleştirir ve zaman/mekan yakınlığına göre kopya kayıtları kaldırır (tekilleştirme).
+*   **Grid Sistemi:** Çalışma bölgesini belirlenen çözünürlükte enlem/boylam hücrelerine ayırır.
+*   **Özellik Mühendisliği:** Her hücre ve zaman adımı için çeşitli sismik özellikler hesaplar:
+    *   Deprem Sayısı
+    *   Ortalama ve Maksimum Büyüklük
+    *   Enerji Vekili (Gutenberg-Richter ilişkisine dayalı)
+    *   Depremler Arası Ortalama/Standart Sapma Zaman Farkı
+    *   b-değeri ve Tamamlanma Büyüklüğü (Mc)
+    *   Ortalama Derinlik
+    *   *(İsteğe Bağlı)* Komşu hücrelerden toplanan özellikler (komşu özelliklerinin ortalaması/maksimumu/sayısı).
+*   **Hedef Tanımlama:** Hedef değişkeni, özellik hesaplama zamanını takip eden tahmin penceresi içinde bir hücrede önemli bir depremin (>= Büyüklük Eşiği) meydana gelip gelmediği olarak tanımlar.
+*   **Makine Öğrenimi Modeli:** Oluşturulan özellikler ve hedefler üzerinde bir XGBoost sınıflandırıcı modeli eğitir.
+*   **Zaman Serisi Çapraz Doğrulama:** Modelin performansını zamana duyarlı çapraz doğrulama bölümleri kullanarak değerlendirir.
+*   **Hiperparametre Optimizasyonu (İsteğe Bağlı):** Potansiyel olarak daha iyi XGBoost hiperparametrelerini bulmak için Optuna kütüphanesini kullanır.
+*   **Gelecek Tahmini:** Eğitilmiş modeli ve en güncel verileri kullanarak *bir sonraki* tahmin penceresi için her bir grid hücresindeki önemli bir deprem olasılığını tahmin eder.
+*   **Çıktı:**
+    *   Tanımlanmış bir eşiğin üzerindeki tahmin edilen olasılıklara sahip grid hücrelerini listeleyen bir `.txt` dosyası oluşturur (yaklaşık konum adları için `geopy` gerektirir).
+    *   Tahmin edilen olasılıkları bir eşiğin üzerinde görselleştiren interaktif bir `.html` haritası oluşturur (`folium` ve `branca` gerektirir).
+    *   İlerleme durumunu, yapılandırma ayrıntılarını ve değerlendirme metriklerini konsola yazdırır.
 
-## Veri Kaynakları
-
-*   **Ana Kaynak (Mevcut Kodda):** [USGS Earthquake Catalog API](https://earthquake.usgs.gov/fdsnws/event/1/)
-*   **Potansiyel Diğer Kaynaklar (Geliştirilebilir):**
-    *   [EMSC FDSNWS](https://www.seismicportal.eu/fdsnws/event/1/)
-    *   [KOERI (Kandilli)](http://www.koeri.boun.edu.tr/scripts/lst0.asp) (API/FDSN erişimi araştırılmalı, web scraping stabil değildir)
-    *   [ISC (International Seismological Centre)](http://www.isc.ac.uk/iscbulletin/) (Tarihsel veriler için en iyi kaynaklardan biri, indirilmesi gerekir)
-
-**Önemli Not:** Uzun tarihsel veriler (örn. 10+ yıl) için API kullanmak çok verimsiz ve limitlere takılabilir. Ciddi modelleme için **ISC, KOERI gibi kaynaklardan önceden indirilmiş, temizlenmiş ve homojenize edilmiş katalogları** kullanmak şiddetle tavsiye edilir.
 
 ## Teknoloji ve Kütüphaneler
 
 *   Python 3.x
+*   requests
 *   pandas
 *   numpy
+*   pytz
 *   scikit-learn
 *   xgboost
-*   requests
 *   tqdm
-*   geopy (Opsiyonel - Bölge isimleri için)
+*   scipy
+*   geopy
 *   folium
 *   branca
+*   optuna
 
 ## Kurulum
 
@@ -67,47 +68,40 @@ Proje, belirlenen coğrafi bölgeyi (varsayılan olarak Türkiye ve çevresi) gr
     ```
 
 ## Kullanım
-
-1.  Terminalde proje dizinindeyken aşağıdaki komutu çalıştırın:
+1.   requirements.txt dosyasında listelenen tüm gerekli (ve istenen isteğe bağlı) kütüphanelerin kurulu olduğundan emin olun.
+2.   Gerekirse deprem_tahmin.py içindeki CONFIG sözlüğünü değiştirin.
+3.  Terminalde proje dizinindeyken aşağıdaki komutu çalıştırın:
     ```bash
     python deprem_tahmin.py
     ```
-2.  Script çalışmaya başlayacak, veri çekecek, özellikleri hesaplayacak, modeli eğitecek ve son olarak gelecek 30 gün için yüksek olasılıklı tahminleri konsola ve `deprem_tahminleri_YYYYMMDD_HHMM.txt` adlı bir dosyaya yazacaktır.
-3.  İşlemler (özellikle veri çekme ve özellik hesaplama) veri miktarına ve pencere boyutlarına bağlı olarak uzun sürebilir.
+4.   Betik, ilerleme güncellemelerini ve sonuçları konsola yazdıracaktır.
+5.   Tamamlandığında, çıktı dosyaları için mevcut dizini kontrol edin (örn. deprem_tahminleri_YYYYMMDD_HHMMSS_TZ.txt ve deprem_olasılık_haritası_YYYYMMDD_HHMMSS_TZ.html).
 
-## Yapılandırma
+## Yapılandırma (CONFIG)
+Anahtar parametreler deprem_tahmin.py betiğinin başındaki CONFIG sözlüğü içinde ayarlanabilir. Önemli olanlardan bazıları şunlardır:
 
-Scriptin başındaki "Ayarlar ve Sabitler" bölümünden bazı parametreleri değiştirebilirsiniz:
+    MIN/MAX_LATITUDE, MIN/MAX_LONGITUDE: Çalışma alanının coğrafi sınırları.
 
-*   `MIN_LATITUDE`, `MAX_LATITUDE`, `MIN_LONGITUDE`, `MAX_LONGITUDE`: Çalışılacak coğrafi bölge.
-*   `GRID_RES_LAT`, `GRID_RES_LON`: Grid hücrelerinin boyutu (derece cinsinden). Daha küçük değerler daha fazla detay ama daha fazla hesaplama yükü demektir.
-*   `DATA_YEARS`: API'den çekilecek tarihsel veri süresi (yıl olarak). **Dikkat:** API ile çok uzun süreler çekmek sorunlu olabilir.
-*   `FEATURE_WINDOW_DAYS`, `PREDICTION_WINDOW_DAYS`, `TIME_STEP_DAYS`: Özellik mühendisliği ve tahmin için zaman pencereleri.
-*   `MAGNITUDE_THRESHOLD`: "Büyük" kabul edilecek minimum deprem büyüklüğü (hedef değişken için).
-*   `B_VALUE_MIN_QUAKES`: b-değeri hesaplamak için gereken minimum deprem sayısı.
-*   `FUTURE_PREDICTION_PROB_THRESHOLD`: Raporlanacak minimum olasılık eşiği.
-*   `PREDICTION_OUTPUT_FILE`: Çıktı dosyasının adı.
-*   `XGB_TREE_METHOD`: `'hist'` (CPU için hızlı) veya `'gpu_hist'` (GPU varsa çok daha hızlı).
+    GRID_RES_LAT, GRID_RES_LON: Grid hücrelerinin çözünürlüğü.
 
-## Geliştirme Fikirleri
+    DATA_YEARS: Geçmişten kaç yıllık verinin çekileceği.
 
-*   API yerine önceden indirilmiş ve temizlenmiş tarihsel kataloglar (ISC, KOERI vb.) kullanmak.
-*   Farklı kaynaklardan gelen veriler için daha gelişmiş tekilleştirme (deduplication) algoritmaları uygulamak.
-*   Magnitüd homojenizasyonu yapmak (tüm veriyi Mw'ye dönüştürmek).
-*   Eksik verileri (özelliklerdeki NaN) basitçe doldurmak yerine daha gelişmiş imputation teknikleri kullanmak (örn. `sklearn.impute.KNNImputer`).
-*   Daha fazla özellik eklemek:
-    *   Bilinen fay hatlarına uzaklık (`geopandas`, `shapely` ile).
-    *   GPS verilerinden elde edilen gerinim oranları (erişilebilir veri kaynakları araştırılmalı).
-    *   Özelliklerin zaman içindeki değişim oranları.
-    *   Komşu hücrelerin özellikleri.
-*   XGBoost için hiperparametre optimizasyonu yapmak (`GridSearchCV`, `RandomizedSearchCV`, `Optuna` vb.).
-*   Farklı makine öğrenmesi modellerini denemek (LightGBM, CatBoost, derin öğrenme modelleri - LSTM, ConvLSTM).
-*   Tahmin eşik değerini (şu an 0.5 veya `FUTURE_PREDICTION_PROB_THRESHOLD`) Precision-Recall eğrisi gibi yöntemlerle optimize etmek.
-*   Sonuçları görselleştirmek (örn. risk haritaları oluşturmak - `matplotlib`, `folium`). (EKLENDI)
+    API_MIN_MAGNITUDE: API'lardan çekilecek minimum büyüklük (daha düşük değerler veri hacmini artırır).
 
-## Katkıda Bulunma
+    FEATURE_WINDOWS_DAYS: Özelliklerin hesaplanacağı zaman pencerelerinin listesi (gün cinsinden, örn. 90 günlük özellikler için [90]).
 
-Katkıda bulunmak isterseniz lütfen önce bir "issue" açarak veya mevcut bir "issue" üzerinden iletişime geçin.
+    PREDICTION_WINDOW_DAYS: Tahminin geleceğe yönelik süresi (gün cinsinden).
+
+    TIME_STEP_DAYS: Geçmiş verilerde ne sıklıkla bir özellik/hedef anlık görüntüsü oluşturulacağı (eğitim verisi boyutunu etkiler).
+
+    MAGNITUDE_THRESHOLD: Tahmin için hedeflenen deprem büyüklüğü (örn. M5.0+ için 5.0).
+
+    ENABLE_NEIGHBOR_FEATURES: Komşu özelliklerini hesaplamak için True olarak ayarlayın (hız için scipy gerektirir).
+
+    ENABLE_OPTUNA: Hiperparametre ayarını etkinleştirmek için True olarak ayarlayın (optuna gerektirir).
+
+    FUTURE_PREDICTION_PROB_THRESHOLD: Bir hücrenin çıktı .txt dosyasına ve haritaya dahil edilmesi için gereken minimum olasılık.
+
 
 ## Sorumluluk Reddi
 
